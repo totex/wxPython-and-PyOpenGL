@@ -171,11 +171,16 @@ class MyPanel(wx.Panel):
         self.bg_color = wx.CheckBox(self, -1, pos=(1130, 360), label="Black background")
         self.wireframe = wx.CheckBox(self, -1, pos=(1130, 390), label="Wireframe mode")
 
-        # text control
+        # text control to display the translation matrix and the rotation matrix combined
         self.log_text = wx.TextCtrl(self, -1, size=(1120, 110), pos=(0, 630), style=wx.TE_MULTILINE)
         self.log_text.BackgroundColour = [70, 125, 70]
         self.log_text.SetFont(font)
         self.log_text.AppendText(str(self.canvas.combined_matrix.T))
+
+        # identity button, resets the matrices to identity
+        self.identity_btn = wx.Button(self, -1, label="Set identity \nmatrix", pos=(1130, 630), size=(100, 50))
+        self.identity_btn.BackgroundColour = [125, 125, 125]
+        self.identity_btn.ForegroundColour = [255, 255, 255]
 
         # all the event bindings
         self.Bind(wx.EVT_BUTTON, self.rotate, self.rot_btn)
@@ -185,17 +190,33 @@ class MyPanel(wx.Panel):
         self.Bind(wx.EVT_SLIDER, self.translate)
         self.Bind(wx.EVT_CHECKBOX, self.change_bg_color, self.bg_color)
         self.Bind(wx.EVT_CHECKBOX, self.set_wireframe, self.wireframe)
+        self.Bind(wx.EVT_BUTTON, self.set_identity, self.identity_btn)
 
     # all the methods
 
+    # sets the identity matrix, stops the rotation and resets the sliders to zero
+    def set_identity(self, event):
+        self.canvas.combined_matrix = Matrix44.identity()
+        self.canvas.rotate = False
+        self.canvas.trans_x, self.canvas.trans_y, self.canvas.trans_z = 0, 0, 0
+        self.canvas.rot_y = Matrix44.identity()
+        self.x_slider.SetValue(0)
+        self.y_slider.SetValue(0)
+        self.z_slider.SetValue(0)
+        self.log_matrix()
+        self.canvas.Refresh()
+
+    # displays the combined matrix on the text control area
     def log_matrix(self):
         self.log_text.Clear()
         self.log_text.AppendText(str(self.canvas.combined_matrix.T))
 
+    # sets the wireframe mode
     def set_wireframe(self, event):
         self.canvas.wireframe = self.wireframe.GetValue()
         self.canvas.Refresh()
 
+    # changes the clear color to black
     def change_bg_color(self, event):
         self.canvas.bg_color = self.bg_color.GetValue()
         self.canvas.Refresh()
